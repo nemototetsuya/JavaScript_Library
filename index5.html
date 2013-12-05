@@ -1,0 +1,160 @@
+<html>
+<head>
+<title>
+ExecWBテスト
+</title>
+</head>
+<body text="indigo" bgcolor="lightgreen" leftmargin="50" topmargin="50">
+	ExecWB()を使用した印刷を行います。
+	<FORM>
+		<BUTTON type="button" onclick="test_print0();">test_print0()_VBS印刷テスト</BUTTON><BR><BR>
+		<BUTTON type="button" onclick="test_print1();">test_print1()_JavaScript印刷テスト</BUTTON><BR><BR>
+		<BUTTON type="button" onclick="test_print2();">test_print2()_JavaScript印刷テスト</BUTTON><BR><BR>
+		<BUTTON type="button" onclick="test_print3();">test_print3()_JavaScript印刷テスト</BUTTON><BR><BR>
+		<BUTTON type="button" onclick="test_print4();">test_print4()_VBS印刷テスト</BUTTON><BR><BR>
+	</FORM>
+</body>
+</html>
+<object id=ShellWindows classid=clsid:9BA05972-F6A8-11CF-A442-00A0C90A8F39></object>
+<script type="text/vbscript">
+Function vbPrintIE2(url)
+	Dim ObjFSO
+	Dim ObjShell
+	Dim ObjWindow
+	Dim STR_ProgramName
+	getTargetIE = 0
+	Set ObjFSO = CreateObject("Scripting.FileSystemObject")
+	'Set ObjShell = CreateObject("Shell.Application")
+	Set ObjShell = CreateObject("Shell.Application")
+
+	'<object id=ShellWindows classid=clsid:9BA05972-F6A8-11CF-A442-00A0C90A8F39></object> 
+
+	For Each ObjWindow In ShellWindows
+		STR_ProgramName = ObjFSO.GetFileName(ObjWindow.FullName)
+		If LCase(STR_ProgramName) = "iexplore.exe" Then
+			MsgBox(ObjWindow.LocationURL)
+			MsgBox(url)
+		'If ObjWindow.Type = "HTML ドキュメント" Then
+			If ObjWindow.LocationURL = url Then
+				ObjWindow.ExecWB 6, 2
+				getTargetIE = ObjWindow
+				Exit Function
+			End If
+		End If
+	Next
+End Function
+Function vbPrintIE(url)
+	Dim objIE '変数を定義します。
+	Set objIE = CreateObject("InternetExplorer.Application") 'オブジェクトを作成します。
+	objIE.Visible = True      '可視、Trueで見えるようにします。
+	objIE.Navigate url  '.Navigate メソッドで指定のURLを表示する。
+
+	Sleep(3000)
+	'WScript.Sleep 3000
+	Do Until objIE.Busy = False
+		'空ループだと無駄にCPUを使うので250ミリ秒のインターバルを置く
+		Sleep(3000)
+	Loop
+
+	objIE.ExecWB 6, 2
+
+	Sleep(250)
+
+	'objIE.Quit  '.Quitで閉じる
+	Set objIE = Nothing '使用したオブジェクト変数もキレイにしてね。
+End Function
+</script>
+
+<script type="text/javascript">
+<!--
+function test_print4()
+{
+	var TargetURL;
+	//TargetURL = "file:///C:/Users/nemoto/Google%20ドライブ/根本/ExecWB動作確認/実験/index5.html";
+	TargetURL = location.href;
+	window.execScript("vbPrintIE2('" + TargetURL + "')",'VBScript');
+}
+function PrintIE(url)
+{
+	var ie = new ActiveXObject("InternetExplorer.Application");
+	// ウインドウを表示する
+	ie.visible = true;
+	// Googleを開く
+	ie.navigate(url);
+	while( (ie.Busy) || (ie.readystate != 4) ) {
+		Sleep(100);
+	}
+	ie.ExecWB(6, 2);
+}
+function test_print0()
+{
+	var TargetURL;
+	TargetURL = "file:///C:/Users/nemoto/Google%20ドライブ/根本/ExecWB動作確認/実験/index3.html";
+	window.execScript("vbPrintIE('" + TargetURL + "')",'VBScript');
+}
+function test_print1()
+{
+	// ExecWB 1つ目の引数
+	//  6:OLECMDID_PRINT	Fileメニューの「印刷」
+
+	// 2つ目の引数
+	//  0:OLECMDEXECOPT_DODEFAULT		デフォルトの動作を行う
+	//  1:OLECMDEXECOPT_PROMPTUSER		プロンプトを表示する
+	//  2:OLECMDEXECOPT_DONTPROMPTUSER	プロンプトを表示しない
+	//  3:OLECMDEXECOPT_SHOWHELP		ヘルプを表示する
+	var objWebBrowser = getIE();
+	objWebBrowser.ExecWB(6, 2);
+}
+function test_print2()
+{
+	var TargetURL;
+	TargetURL = "file:///C:/Users/nemoto/Google%20ドライブ/根本/ExecWB動作確認/実験/index3.html";
+	PrintIE(TargetURL);
+}
+function test_print3()
+{
+	var TargetURL;
+	TargetURL = "file:///C:/Users/nemoto/Google%20ドライブ/根本/ExecWB動作確認/実験/index3.html";
+	TargetURL = "file://Yscl26/実験/index3.html";
+
+	var ChildWindow = window.open(TargetURL,"test");
+
+	var sShellWindowsCode = '<object id=ShellWindows classid=clsid:9BA05972-F6A8-11CF-A442-00A0C90A8F39></object>';
+	ChildWindow.document.body.insertAdjacentHTML('beforeEnd', sShellWindowsCode); 
+
+	var sWebBrowserCode = '<object width="0" height="0" classid="CLSID:8856F961-340A-11D0-A96B-00C04FD705A2"></object>';
+	ChildWindow.document.body.insertAdjacentHTML('beforeEnd', sWebBrowserCode); 
+
+
+	var objWebBrowser = ChildWindow.document.body.lastChild;
+	objWebBrowser.ExecWB(6, 2);
+
+	//ChildWindow.ExecWB(6,2);
+	//ChildWindow.print();
+	//Sleep(3000);
+	//test_print1();
+	//ChildWindow.execScript("print_func(2)","JavaScript");// 子Window上に定義された関数が呼び出される
+}
+
+function getIE()
+{
+	if(window.ActiveXObject == null || document.body.insertAdjacentHTML == null) return;
+
+	var sWebBrowserCode = '<object width="0" height="0" classid="CLSID:8856F961-340A-11D0-A96B-00C04FD705A2"></object>';
+
+	document.body.insertAdjacentHTML('beforeEnd', sWebBrowserCode); 
+
+	var objWebBrowser = document.body.lastChild;
+	return objWebBrowser;
+}
+function Sleep(ms) {
+    var d1 = new Date().getTime();
+    var d2 = new Date().getTime();
+    while( d2 < (d1 + ms) ) {
+        d2 = new Date().getTime();
+    }
+    return;
+}
+// -->
+</script>
+
